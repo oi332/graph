@@ -15,35 +15,89 @@ namespace Graph.Tests
         }
 
         [Fact]
+        public void NotAddVertexAlreadyExistName()
+        {
+            var graph = new Graph();
+            graph.CreateVertex('A');
+            graph.CreateVertex('A');
+
+            Assert.True(graph.VerticesCount() == 1);
+        }
+
+        [Fact]
         public void AddEdgeBetweenVertices()
         {
             var graph = new Graph();
             graph.CreateVertex('A');
             graph.CreateVertex('B');
+            graph.CreateVertex('C');
 
-            graph.AddEdge('A', 'B');
+            graph.AddEdge('A', 'C');
+            graph.AddEdge('B', 'C');
 
+            Assert.True(graph.AdjacentsCount('C') == 0);
+            Assert.True(graph.AdjacentsCount('B') == 1);
             Assert.True(graph.AdjacentsCount('A') == 1);
         }
 
         [Fact]
-        public void BeConnected()
+        public void ReturnTrueWhenGraphIsConnected1()
+        {
+            var graph = new Graph();
+            graph.CreateVertex('A');
+            graph.CreateVertex('B');
+            graph.CreateVertex('C');
+
+            graph.AddEdge('A', 'C');
+            graph.AddEdge('B', 'C');
+
+            Assert.True(graph.IsWeaklyConnected());
+        }
+
+        [Fact]
+        public void ReturnTrueWhenGraphIsConnected2()
+        {
+            var graph = new Graph();
+            graph.CreateVertex('A');
+            graph.CreateVertex('B');
+
+            graph.AddEdge('B', 'A');
+
+            Assert.True(graph.IsWeaklyConnected());
+        }
+
+        [Fact]
+        public void ReturnTrueWhenGraphHasNoConnectionsAndOnlyOneVertex()
+        {
+            var graph = new Graph();
+            graph.CreateVertex('A'); 
+
+            Assert.True(graph.IsWeaklyConnected());
+        }
+
+        [Fact]
+        public void ReturnFalseWhenGraphIsNotConnected1()
+        {
+            var graph = new Graph();
+            graph.CreateVertex('A');
+            graph.CreateVertex('B');
+
+            Assert.False(graph.IsWeaklyConnected());
+        }
+
+        [Fact]
+        public void ReturnFalseWhenGraphIsNotConnected2()
         {
             var graph = new Graph();
             graph.CreateVertex('A');
             graph.CreateVertex('B');
             graph.CreateVertex('C');
             graph.CreateVertex('D');
-            graph.CreateVertex('E');
-            graph.CreateVertex('F');
 
-            graph.AddEdge('A', 'B');
-            graph.AddEdge('B', 'E');
-            graph.AddEdge('B', 'C');
-            graph.AddEdge('E', 'F');
-            graph.AddEdge('F', 'D');
+            graph.AddEdge('B', 'A');
+            graph.AddEdge('C', 'D');
 
-            Assert.True(graph.IsConnected());
+            Assert.False(graph.IsWeaklyConnected());
         }
     }
 }
