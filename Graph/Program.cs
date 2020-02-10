@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Graph
 {
-    class Vertex
+    public class Vertex
     {
         private readonly IList<Vertex> _adjacents = new List<Vertex>();
         public char Name { get; }
@@ -26,13 +26,15 @@ namespace Graph
             }
 
             _adjacents.Add(v);
-            v.AddAdjacent(this);
         }
 
-
+        public int AdjacentsCount()
+        {
+            return _adjacents.Count;
+        }
     }
 
-    class Graph
+    public class Graph
     {
         private readonly List<Vertex> _vertices = new List<Vertex>();
         public IEnumerable<Vertex> Vertices
@@ -43,15 +45,9 @@ namespace Graph
 
         private bool Exists(char name)
         {
-            var exist = _vertices.Exists(v => v.Name == name);
-            if (exist)
-            {
-                return true;
-            }
-            return false;
+            return _vertices.Exists(v => v.Name == name);
         }
 
-        // Create vertex
         public void CreateVertex(char name)
         {
             if (Exists(name))
@@ -60,7 +56,6 @@ namespace Graph
             _vertices.Add(new Vertex(name));
         }
 
-        // Add edge
         public void AddEdge(char name1, char name2)
         {
             var vertex1 = _vertices.SingleOrDefault(v => v.Name == name1);
@@ -75,18 +70,35 @@ namespace Graph
             vertex1.AddAdjacent(vertex2);
         }
 
+        public int AdjacentsCount(char name)
+        {
+            var vertex = _vertices.SingleOrDefault(v => v.Name == name);
+            if(vertex == null)
+            {
+                return -1;
+            }
+
+            return vertex.AdjacentsCount();
+        }
+
+        public int VerticesCount()
+        {
+            return _vertices.Count;
+        }
+
         // Uses BFS to determine if a graph is connected by visisting each of the vertices.
-        public bool isConnected()
+        public bool IsConnectedUndirected()
         {
             if (_vertices.Count == 0)
-            {
                 return false;
-            }
+
+            if (_vertices.Count == 1)
+                return true;
 
             var v = _vertices[0];
 
-            Queue<Vertex> q = new Queue<Vertex>();
-            HashSet<Vertex> seen = new HashSet<Vertex>();
+            var q = new Queue<Vertex>();
+            var seen = new HashSet<Vertex>();
 
             q.Enqueue(v);
 
@@ -97,7 +109,6 @@ namespace Graph
                 if (!seen.Contains(curr))
                 {
                     seen.Add(curr);
-                    Console.WriteLine(curr.Name);
                 }
 
                 foreach (var adjacent in curr.Adjacents)
@@ -112,31 +123,18 @@ namespace Graph
             return _vertices.Count == seen.Count;
         }
 
+        public bool IsWeaklyConnected()
+        {
+            return false;
+        }
+
     }
 
 
     class Program
     {
-        
-
         static void Main(string[] args)
         {
-            var graph = new Graph();
-            graph.CreateVertex('A');
-            graph.CreateVertex('B');
-            graph.CreateVertex('C');
-            graph.CreateVertex('D');
-            graph.CreateVertex('E');
-            graph.CreateVertex('F');
-
-            graph.AddEdge('A', 'B');
-            graph.AddEdge('B', 'E');
-            graph.AddEdge('B', 'C');
-            graph.AddEdge('E', 'F');
-            graph.AddEdge('F', 'D');
-
-
-            Console.WriteLine(graph.isConnected());
         }
     }
 }
