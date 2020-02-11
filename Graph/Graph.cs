@@ -9,15 +9,19 @@ namespace Graph
         private readonly List<Vertex> _vertices = new List<Vertex>();
         private readonly List<Edge> _edges = new List<Edge>();
 
-
-        private bool Exists(char name)
+        private bool NameExists(char name)
         {
             return _vertices.Exists(v => v.Name == name);
         }
 
+        private bool EdgeExists(char name1, char name2)
+        {
+            return _edges.Exists(e => e.From.Name == name1 && e.To.Name == name2);
+        }
+
         public void CreateVertex(char name)
         {
-            if (Exists(name))
+            if (NameExists(name))
                 return;
 
             _vertices.Add(new Vertex(name));
@@ -34,7 +38,17 @@ namespace Graph
                 return;
             }
 
-            _edges.Add(new Edge(vertex1, vertex2));
+            if (EdgeExists(name1, name2))
+                return;
+
+            var newEdge = new Edge(vertex1, vertex2);
+            
+            _edges.Add(newEdge);
+            
+            if(HasCycle(newEdge.From))
+            {
+                _edges.Remove(newEdge);
+            }
         }
 
         public int AdjacentsCount(char name)
@@ -58,43 +72,22 @@ namespace Graph
             return _edges.Count;
         }
 
-        private bool OppositeDirectionExists(Edge edge)
+        public bool IsWeaklyConnected() 
         {
-            return _edges.Exists(e => e.From == edge.To && e.To == edge.From);
-        }
-        private List<Edge> TransformToUndirected()
-        {
-            var missingEdges = new List<Edge>();
-
-            foreach (var edge in _edges)
-            {
-                if (!OppositeDirectionExists(edge))
-                {
-                    missingEdges.Add(new Edge(edge.To, edge.From));
-                }
-            }
-            missingEdges.AddRange(_edges);
-            return missingEdges;
-        }
-
-        public bool IsWeaklyConnected()
-        {
-            var edges = TransformToUndirected();
             if(_vertices.Count == 1)
             {
                 return true;
             }
 
-            if(edges.Count == 0)
+            if(_edges.Count == 0)
             {
                 return false;
             }
 
-
             var q = new Queue<Vertex>();
             var seen = new HashSet<Vertex>();
 
-            var src = edges[0].From;
+            var src = _edges[0].From;
 
             q.Enqueue(src);
 
@@ -107,22 +100,86 @@ namespace Graph
                     seen.Add(curr);
                 }
 
-                var adjacents = edges.Where(e => e.From == curr).Select(e => e.To).ToList();
+                var adjacents = _edges.Where(e => e.From == curr).Select(e => e.To)
+                                      .Union(_edges.Where(e => e.To == curr).Select(e => e.From));
 
                 foreach (var adjacent in adjacents)
                 {
-                    if(!seen.Contains(adjacent))
+                    if (!seen.Contains(adjacent))
                     {
-                        seen.Add(adjacent);
                         q.Enqueue(adjacent);
                     }
                 }
             }
-            foreach (var item in seen)
-            {
-                Console.WriteLine(item.Name);
-            }
+
             return _vertices.Count == seen.Count;
         }
+
+        public bool HasCycle(Vertex v)
+        {
+            var q = new Queue<Vertex>();
+            var seen = new HashSet<Vertex>();
+
+            q.Enqueue(v);
+
+            while(q.Count != 0)
+            {
+                var curr = q.Dequeue();
+
+                if(!seen.Contains(curr))
+                {
+                    seen.Add(curr);
+                }
+
+                var adjacents = _edges.Where(e => e.From == curr).Select(e => e.To);
+                foreach (var adjacent in adjacents)
+                {
+                    if(adjacent == v)
+                    {
+                        return true;
+                    }
+
+                    if(!seen.Contains(adjacent))
+                    {
+                        q.Enqueue(adjacent);
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        //public bool HasCycle(Vertex v)
+        //{
+        //    var unvisited = new HashSet<Vertex>(_vertices);
+        //    var closed = new HashSet<Vertex>();
+        //    var open = new HashSet<Vertex>();
+        //    var found = false;
+        //    DfsVisit(v, unvisited, closed, open, ref found);
+        //    return found;
+        //}
+
+        //private void DfsVisit(Vertex v, HashSet<Vertex> unvisited, HashSet<Vertex> closed, HashSet<Vertex> open, ref bool flag)
+        //{
+        //    open.Add(v);
+        //    unvisited.Remove(v);
+
+        //    var adjacents = _edges.Where(e => e.From == v).Select(e => e.To).ToList();
+        //    foreach(var vertex in adjacents)
+        //    {
+        //        if(unvisited.Contains(vertex))
+        //        {
+        //            DfsVisit(vertex, unvisited, closed, open, ref flag);
+        //        }
+        //        else if(open.Contains(vertex))
+        //        {
+        //            flag = true;
+        //            return;
+        //        }
+        //    }
+
+        //    closed.Add(v);
+        //    open.Remove(v);
+        //}
     }
 }
